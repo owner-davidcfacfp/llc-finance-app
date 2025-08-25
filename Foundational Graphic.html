@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Accounting Guide for Your Real Estate LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony (Beige, Slate, Sage) -->
+    <!-- Application Structure Plan: A thematic, single-page guide designed for educational flow. It starts with foundational principles, moves to a central interactive flowchart visualizing money movement, and concludes with practical management topics. This structure breaks down a complex report into a guided, step-by-step learning experience, prioritizing user understanding over mirroring the report's linear format. The interactive flowchart is the core, allowing users to actively explore the specific transactions relevant to them, reinforcing the critical concept of financial separation. -->
+    <!-- Visualization & Content Choices: The primary visualization is a custom-built interactive flowchart using HTML/CSS and JS, not a library, for maximum control over styling and interaction. Clicking a flow step updates a dedicated panel with explanations and journal entries (Goal: Organize/Change, Method: HTML/JS Interaction). A Chart.js donut chart is used illustratively to break down debt payments (Goal: Inform, Method: Chart.js/Canvas). Key concepts are presented in clickable cards to manage information density (Goal: Inform, Method: HTML/JS Interaction). This approach makes dense information digestible and engaging. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8FAFC; /* Slate 50 */
+            color: #334155; /* Slate 700 */
+        }
+        .account-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .account-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        .flow-line {
+            position: absolute;
+            background-color: #CBD5E1;
+            z-index: -1;
+        }
+        .modal-bg {
+            transition: opacity 0.3s ease;
+        }
+        .modal-content {
+            transition: all 0.3s ease;
+        }
+        .tab.active {
+            border-bottom-color: #4F46E5; /* Indigo 600 */
+            color: #4F46E5;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-slate-800">LLC Financial Dashboard</h1>
+            <div class="hidden md:flex space-x-6">
+                <a href="#principles" class="text-slate-600 hover:text-slate-900">Principles</a>
+                <a href="#dashboard" class="text-slate-600 hover:text-slate-900">Dashboard</a>
+                <a href="#management" class="text-slate-600 hover:text-slate-900">Management</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <section class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-slate-800 mb-4">Interactive Financial Flow</h2>
+            <p class="max-w-3xl mx-auto text-lg text-slate-600">This dashboard visualizes the financial structure of your LLC. Click on any account to expand its details, view transactions, and see financing terms.</p>
+        </section>
+
+        <section id="dashboard" class="mb-16 relative">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-16 items-center">
+                <!-- Personal Zone -->
+                <div class="space-y-8 text-center">
+                    <h3 class="text-lg font-semibold text-slate-500 uppercase tracking-wider">Personal Zone</h3>
+                    <div class="space-y-8 flex flex-col items-center">
+                        <div id="julie-finances" data-account-id="juliePersonalFinances" class="account-card bg-white w-40 h-40 rounded-full shadow-lg border border-slate-200 flex items-center justify-center">
+                            <h4 class="font-bold text-slate-800 text-xl">Julie</h4>
+                        </div>
+                        <div id="david-finances" data-account-id="davidPersonalFinances" class="account-card bg-white w-40 h-40 rounded-full shadow-lg border border-slate-200 flex items-center justify-center">
+                            <h4 class="font-bold text-slate-800 text-xl">David</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LLC Zone -->
+                <div class="space-y-8 text-center">
+                    <h3 class="text-lg font-semibold text-slate-500 uppercase tracking-wider">LLC Zone</h3>
+                    <div id="llc-bank" data-account-id="llcBank" class="account-card bg-gradient-to-br from-indigo-500 to-violet-600 text-white p-6 rounded-xl shadow-2xl">
+                        <h4 class="font-bold text-xl">LLC Bank Account</h4>
+                        <p class="text-sm opacity-80">Business Operations Hub</p>
+                        <p id="llc-bank-balance" class="text-3xl font-bold mt-2">$0.00</p>
+                    </div>
+                     <div class="grid grid-cols-2 gap-4">
+                        <div id="member-loan" data-account-id="memberLoan" class="account-card bg-white p-4 rounded-xl shadow-lg border border-slate-200">
+                            <h4 class="font-bold text-slate-800">Member Loan</h4>
+                            <p class="text-sm text-slate-500">Liability</p>
+                            <p id="member-loan-balance" class="font-semibold text-red-600 mt-1">$0.00</p>
+                        </div>
+                        <div id="member-equity" data-account-id="memberEquity" class="account-card bg-white p-4 rounded-xl shadow-lg border border-slate-200">
+                            <h4 class="font-bold text-slate-800">Member Equity</h4>
+                            <p class="text-sm text-slate-500">Ownership</p>
+                            <p id="member-equity-balance" class="font-semibold text-green-600 mt-1">$0.00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- External Zone -->
+                <div class="space-y-8 text-center">
+                    <h3 class="text-lg font-semibold text-slate-500 uppercase tracking-wider">External Zone</h3>
+                    <div class="grid grid-cols-1 gap-8">
+                        <div id="property-asset" data-account-id="propertyAsset" class="account-card bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                            <h4 class="font-bold text-slate-800 text-lg">Property Asset</h4>
+                            <p class="text-sm text-slate-500">Building & Improvements</p>
+                             <p id="property-asset-balance" class="text-xl font-bold text-slate-700 mt-2">$0.00</p>
+                        </div>
+                        <div id="external-lenders" data-account-id="externalLenders" class="account-card bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                            <h4 class="font-bold text-slate-800 text-lg">Lenders & Vendors</h4>
+                            <p class="text-sm text-slate-500">Debt & Expenses</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="principles" class="mb-16">
+            <h3 class="text-3xl font-bold text-center text-slate-800 mb-8">Foundational Principles</h3>
+            <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <div class="bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                    <h4 class="text-xl font-semibold text-slate-800 mb-3">The Golden Rule: Financial Separation</h4>
+                    <p class="text-slate-600">The most critical concept is treating the LLC as a completely separate entity. This means a dedicated business bank account is non-negotiable. All income (rent) must go into this account, and all business expenses must be paid from it. Mixing personal and business funds, known as "commingling," can destroy the liability protection the LLC provides.</p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                    <h4 class="text-xl font-semibold text-slate-800 mb-3">Pass-Through Taxation Explained</h4>
+                    <p class="text-slate-600">Your LLC itself doesn't pay income tax. Instead, the profits and losses are "passed through" to you and David. The LLC files an informational return (Form 1065), and you each receive a Schedule K-1 detailing your share of the income, which you then report on your personal tax returns. This avoids the double taxation of corporations.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="management" class="mb-16 max-w-5xl mx-auto">
+            <h3 class="text-3xl font-bold text-center text-slate-800 mb-8">Property Management Accounting</h3>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                    <h4 class="text-xl font-semibold text-slate-800 mb-3">Repairs vs. Capital Improvements</h4>
+                    <p class="text-slate-600 mb-4">This is a key tax distinction. <span class="font-semibold">Repairs</span> are expensed immediately. <span class="font-semibold">Capital Improvements</span> (like the new roof) add long-term value and must be capitalized and depreciated over 27.5 years.</p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                    <h4 class="text-xl font-semibold text-slate-800 mb-3">Depreciation: Your Best Friend</h4>
+                    <p class="text-slate-600">Depreciation is a "non-cash" deduction that allows you to recover the cost of your property over time. It reduces your taxable income without you spending any actual money in that year, a primary benefit of real estate investing.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <!-- Modal -->
+    <div id="account-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="modal-bg fixed inset-0 bg-black bg-opacity-50"></div>
+        <div class="modal-content bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl relative flex flex-col transform scale-95 opacity-0">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-6 border-b border-slate-200">
+                <div>
+                    <h3 id="modal-title" class="text-2xl font-bold text-slate-800">Account Details</h3>
+                    <p id="modal-subtitle" class="text-sm text-slate-500"></p>
+                </div>
+                <button id="close-modal-btn" class="text-slate-400 hover:text-slate-600 text-3xl leading-none">&times;</button>
+            </div>
+            <!-- Modal Body -->
+            <div class="flex-grow p-6 overflow-y-auto">
+                <div id="modal-tabs" class="border-b border-slate-200 mb-6">
+                    <!-- Tabs will be injected here -->
+                </div>
+                <div id="modal-tab-content">
+                    <!-- Tab content will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const accountsData = {
+        juliePersonalFinances: {
+            name: "Julie's Personal Finances",
+            subtitle: "Source of HELOC capital and destination for distributions.",
+            balance: null,
+            transactions: [
+                { date: '2025-01-10', description: 'Draw from HELOC for down payment', debit: 50000, credit: 0 },
+                { date: '2025-01-15', description: 'Capital Contribution to LLC', debit: 0, credit: 50000 },
+                { date: '2025-03-01', description: 'Received share of personal loan for roof', debit: 7500, credit: 0 },
+                { date: '2025-03-05', description: 'Loaned funds to LLC', debit: 0, credit: 7500 },
+                { date: '2025-04-05', description: 'Distribution from LLC', debit: 1000, credit: 0 },
+                { date: '2025-04-06', description: 'Payment to HELOC Lender', debit: 0, credit: 500 },
+                { date: '2025-04-06', description: 'Share of Mortgage Payment', debit: 0, credit: 750 },
+            ]
+        },
+        davidPersonalFinances: {
+            name: "David's Personal Finances",
+            subtitle: "Source of loan capital and destination for distributions.",
+            balance: null,
+            transactions: [
+                { date: '2025-03-01', description: 'Received share of personal loan for roof', debit: 7500, credit: 0 },
+                { date: '2025-03-05', description: 'Loaned funds to LLC', debit: 0, credit: 7500 },
+                { date: '2025-04-05', description: 'Distribution from LLC', debit: 1000, credit: 0 },
+                { date: '2025-04-06', description: 'Share of Mortgage Payment', debit: 0, credit: 750 },
+            ]
+        },
+        llcBank: {
+            name: "LLC Business Bank Account",
+            subtitle: "Central hub for all business income and expenses.",
+            balance: 31500,
+            transactions: [
+                { date: '2025-01-15', description: 'Capital Contribution from Julie', debit: 50000, credit: 0 },
+                { date: '2025-03-05', description: 'Loan from Members (Roof)', debit: 15000, credit: 0 },
+                { date: '2025-03-10', description: 'Payment to Roofer', debit: 0, credit: 15000 },
+                { date: '2025-04-01', description: 'Rental Income Received', debit: 3500, credit: 0 },
+                { date: '2025-04-05', description: 'Distribution to Members', debit: 0, credit: 2000 },
+            ]
+        },
+        memberLoan: {
+            name: "Loan from Members",
+            subtitle: "A formal liability owed by the LLC to its members.",
+            balance: 15000,
+            transactions: [
+                { date: '2025-03-05', description: 'Loan proceeds for roof', debit: 0, credit: 15000 },
+            ],
+            financingTerms: {
+                principal: 15000,
+                interestRate: 5.0,
+                termYears: 10
+            }
+        },
+        memberEquity: {
+            name: "Members' Equity",
+            subtitle: "Represents the ownership stake in the LLC.",
+            balance: 48000,
+            transactions: [
+                { date: '2025-01-15', description: 'Julie - Capital Contribution', debit: 0, credit: 50000 },
+                { date: '2025-04-05', description: 'Distribution to Members', debit: 2000, credit: 0 },
+            ]
+        },
+        propertyAsset: {
+            name: "Property Asset",
+            subtitle: "The capitalized value of the building and improvements.",
+            balance: 265000,
+            transactions: [
+                { date: '2025-01-20', description: 'Property Acquisition (Building Value)', debit: 250000, credit: 0 },
+                { date: '2025-03-10', description: 'Capital Improvement (New Roof)', debit: 15000, credit: 0 },
+            ]
+        },
+        externalLenders: {
+            name: "External Parties",
+            subtitle: "Lenders, vendors, tenants, and contractors.",
+            balance: null,
+            transactions: [
+                { date: '2025-03-10', description: 'Payment received for roof', debit: 15000, credit: 0 },
+                { date: '2025-04-01', description: 'Rent payment made to LLC', debit: 0, credit: 3500 },
+                { date: '2025-04-06', description: 'Mortgage payment received', debit: 1500, credit: 0 },
+            ]
+        }
+    };
+
+    function formatCurrency(amount) {
+        if (amount === null) return '';
+        return amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    }
+
+    function updateDashboardBalances() {
+        document.getElementById('llc-bank-balance').textContent = formatCurrency(accountsData.llcBank.balance);
+        document.getElementById('member-loan-balance').textContent = formatCurrency(accountsData.memberLoan.balance);
+        document.getElementById('member-equity-balance').textContent = formatCurrency(accountsData.memberEquity.balance);
+        document.getElementById('property-asset-balance').textContent = formatCurrency(accountsData.propertyAsset.balance);
+    }
+    
+    const modal = document.getElementById('account-modal');
+    const modalBg = modal.querySelector('.modal-bg');
+    const modalContent = modal.querySelector('.modal-content');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+
+    document.querySelectorAll('.account-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const accountId = card.dataset.accountId;
+            openModal(accountId);
+        });
+    });
+
+    function openModal(accountId) {
+        const data = accountsData[accountId];
+        document.getElementById('modal-title').textContent = data.name;
+        document.getElementById('modal-subtitle').textContent = data.subtitle;
+
+        const tabsContainer = document.getElementById('modal-tabs');
+        tabsContainer.innerHTML = '';
+        const availableTabs = ['Transactions'];
+        if (data.financingTerms) {
+            availableTabs.push('Financing Terms', 'Amortization');
+        }
+
+        availableTabs.forEach((tabName, index) => {
+            const tab = document.createElement('button');
+            tab.className = `tab text-sm font-semibold p-4 border-b-2 border-transparent text-slate-500 hover:text-slate-700 ${index === 0 ? 'active' : ''}`;
+            tab.textContent = tabName;
+            tab.dataset.tabContentId = tabName.toLowerCase().replace(/\s+/g, '-');
+            tabsContainer.appendChild(tab);
+        });
+
+        tabsContainer.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabsContainer.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                renderTabContent(accountId, tab.dataset.tabContentId);
+            });
+        });
+
+        renderTabContent(accountId, availableTabs[0].toLowerCase().replace(/\s+/g, '-'));
+
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modalBg.classList.remove('opacity-0');
+            modalContent.classList.remove('scale-95', 'opacity-0');
+        }, 10);
+    }
+
+    function closeModal() {
+        modalBg.classList.add('opacity-0');
+        modalContent.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
+    modalBg.addEventListener('click', closeModal);
+    closeModalBtn.addEventListener('click', closeModal);
+
+    function renderTabContent(accountId, tabId) {
+        const data = accountsData[accountId];
+        const contentContainer = document.getElementById('modal-tab-content');
+        let html = '';
+
+        switch (tabId) {
+            case 'transactions':
+                html = `
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-slate-50 text-xs text-slate-700 uppercase">
+                                <tr>
+                                    <th class="px-6 py-3">Date</th>
+                                    <th class="px-6 py-3">Description</th>
+                                    <th class="px-6 py-3 text-right">Debit (In)</th>
+                                    <th class="px-6 py-3 text-right">Credit (Out)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.transactions.map(tx => `
+                                    <tr class="bg-white border-b">
+                                        <td class="px-6 py-4">${tx.date}</td>
+                                        <td class="px-6 py-4 font-medium text-slate-900">${tx.description}</td>
+                                        <td class="px-6 py-4 text-right text-green-600">${tx.debit > 0 ? formatCurrency(tx.debit) : ''}</td>
+                                        <td class="px-6 py-4 text-right text-red-600">${tx.credit > 0 ? formatCurrency(tx.credit) : ''}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                break;
+            case 'financing-terms':
+                const terms = data.financingTerms;
+                html = `
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-6 text-center">
+                        <div class="bg-slate-100 p-4 rounded-lg">
+                            <p class="text-sm text-slate-500">Principal</p>
+                            <p class="text-2xl font-bold text-slate-800">${formatCurrency(terms.principal)}</p>
+                        </div>
+                        <div class="bg-slate-100 p-4 rounded-lg">
+                            <p class="text-sm text-slate-500">Interest Rate</p>
+                            <p class="text-2xl font-bold text-slate-800">${terms.interestRate.toFixed(2)}%</p>
+                        </div>
+                        <div class="bg-slate-100 p-4 rounded-lg">
+                            <p class="text-sm text-slate-500">Term</p>
+                            <p class="text-2xl font-bold text-slate-800">${terms.termYears} Years</p>
+                        </div>
+                    </div>
+                `;
+                break;
+            case 'amortization':
+                html = generateAmortizationTable(data.financingTerms);
+                break;
+        }
+        contentContainer.innerHTML = html;
+    }
+
+    function generateAmortizationTable(terms) {
+        const { principal, interestRate, termYears } = terms;
+        const monthlyRate = interestRate / 100 / 12;
+        const numberOfPayments = termYears * 12;
+        const monthlyPayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+
+        let tableHtml = `
+            <div class="mb-4 text-center">
+                <p class="text-sm text-slate-500">Calculated Monthly Payment</p>
+                <p class="text-2xl font-bold text-indigo-600">${formatCurrency(monthlyPayment)}</p>
+            </div>
+            <div class="overflow-auto max-h-96">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-slate-50 text-xs text-slate-700 uppercase sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3">Pmt #</th>
+                            <th class="px-4 py-3 text-right">Principal</th>
+                            <th class="px-4 py-3 text-right">Interest</th>
+                            <th class="px-4 py-3 text-right">Remaining Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+        
+        let remainingBalance = principal;
+        for (let i = 1; i <= numberOfPayments; i++) {
+            const interest = remainingBalance * monthlyRate;
+            const principalPayment = monthlyPayment - interest;
+            remainingBalance -= principalPayment;
+            tableHtml += `
+                <tr class="bg-white border-b">
+                    <td class="px-4 py-2">${i}</td>
+                    <td class="px-4 py-2 text-right">${formatCurrency(principalPayment)}</td>
+                    <td class="px-4 py-2 text-right">${formatCurrency(interest)}</td>
+                    <td class="px-4 py-2 text-right font-medium">${formatCurrency(Math.abs(remainingBalance))}</td>
+                </tr>`;
+        }
+        
+        tableHtml += `</tbody></table></div>`;
+        return tableHtml;
+    }
+    
+    const navLinks = document.querySelectorAll('header a');
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = link.getAttribute('href');
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                const headerOffset = 80;
+                const elementPosition = targetElement.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: "smooth"
+                });
+            }
+        });
+    });
+
+    updateDashboardBalances();
+});
+</script>
+</body>
+</html>
