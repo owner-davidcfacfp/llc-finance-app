@@ -518,6 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
         floors.forEach(floor => {
             const tenantsOnFloor = accountsData.rent.baseTenants.filter(t => t.floor === floor);
             if (tenantsOnFloor.length > 0) {
+                let floorSubtotal = 0;
                 tenantsHtml += `
                     <div class="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
                         <h3 class="text-lg font-bold text-slate-800 mb-3">${floor}</h3>
@@ -538,6 +539,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     const tenantData = monthRecord.tenants.find(t => t.id === baseTenant.id) || { monthlyRent: 'TBD', due: 0, received: 0 };
                     let monthlyRentValue = tenantData.monthlyRent === 'TBD' ? '' : tenantData.monthlyRent;
                     let monthlyRentPlaceholder = tenantData.monthlyRent === 'TBD' ? 'TBD' : '0.00';
+                    const rent = parseFloat(tenantData.monthlyRent);
+                    if (!isNaN(rent)) {
+                        floorSubtotal += rent;
+                    }
                     tenantsHtml += `
                         <tr class="bg-white border-b tenant-row" data-tenant-id="${baseTenant.id}">
                             <td class="px-2 py-2"><input type="text" value="${baseTenant.renter}" class="w-full border rounded p-1 rent-renter"></td>
@@ -548,7 +553,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                 });
 
-                tenantsHtml += `</tbody></table></div></div>`;
+                tenantsHtml += `
+                                    <tr class="bg-slate-100 font-bold">
+                                        <td class="px-2 py-2 text-right" colspan="1">Sub-total</td>
+                                        <td class="px-2 py-2 text-right">${formatCurrency(floorSubtotal)}</td>
+                                        <td class="px-2 py-2"></td>
+                                        <td class="px-2 py-2"></td>
+                                    </tr>
+                                </tbody></table></div></div>
+                `;
             }
         });
 
