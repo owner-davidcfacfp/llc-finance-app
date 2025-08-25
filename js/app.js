@@ -512,32 +512,45 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        let tenantsHtml = accountsData.rent.baseTenants.map(baseTenant => {
-            const tenantData = monthRecord.tenants.find(t => t.id === baseTenant.id) || { monthlyRent: 'TBD', due: 0, received: 0 };
-            let monthlyRentValue = tenantData.monthlyRent === 'TBD' ? '' : tenantData.monthlyRent;
-            let monthlyRentPlaceholder = tenantData.monthlyRent === 'TBD' ? 'TBD' : '0.00';
-            return `
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center mb-4 p-4 bg-slate-50 rounded-lg tenant-row border border-slate-200" data-tenant-id="${baseTenant.id}">
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-slate-700">${baseTenant.floor}</label>
-                    <input type="text" value="${baseTenant.renter}" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm rent-renter">
-                </div>
-                <div class="md:col-span-3 grid grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700">Monthly Rent</label>
-                        <input type="text" value="${monthlyRentValue}" placeholder="${monthlyRentPlaceholder}" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm rent-monthly">
-                    </div>
-                     <div>
-                        <label class="block text-sm font-medium text-slate-700">$ Due</label>
-                        <input type="number" step="0.01" value="${tenantData.due}" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm rent-due">
-                    </div>
-                     <div>
-                        <label class="block text-sm font-medium text-slate-700">$ Received</label>
-                        <input type="number" step="0.01" value="${tenantData.received}" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm rent-received">
-                    </div>
-                </div>
-            </div>
-        `}).join('');
+        const floors = ['3rd Floor', '2nd Floor', '1st Floor', 'Barn'];
+        let tenantsHtml = '';
+
+        floors.forEach(floor => {
+            const tenantsOnFloor = accountsData.rent.baseTenants.filter(t => t.floor === floor);
+            if (tenantsOnFloor.length > 0) {
+                tenantsHtml += `
+                    <div class="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-800 mb-3">${floor}</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-slate-200 text-xs text-slate-700 uppercase">
+                                    <tr>
+                                        <th class="px-2 py-2">Renter</th>
+                                        <th class="px-2 py-2 text-right">Monthly Rent</th>
+                                        <th class="px-2 py-2 text-right">$ Due</th>
+                                        <th class="px-2 py-2 text-right">$ Received</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+
+                tenantsOnFloor.forEach(baseTenant => {
+                    const tenantData = monthRecord.tenants.find(t => t.id === baseTenant.id) || { monthlyRent: 'TBD', due: 0, received: 0 };
+                    let monthlyRentValue = tenantData.monthlyRent === 'TBD' ? '' : tenantData.monthlyRent;
+                    let monthlyRentPlaceholder = tenantData.monthlyRent === 'TBD' ? 'TBD' : '0.00';
+                    tenantsHtml += `
+                        <tr class="bg-white border-b tenant-row" data-tenant-id="${baseTenant.id}">
+                            <td class="px-2 py-2"><input type="text" value="${baseTenant.renter}" class="w-full border rounded p-1 rent-renter"></td>
+                            <td class="px-2 py-2"><input type="text" value="${monthlyRentValue}" placeholder="${monthlyRentPlaceholder}" class="w-full border rounded p-1 text-right rent-monthly"></td>
+                            <td class="px-2 py-2"><input type="number" step="0.01" value="${tenantData.due}" class="w-full border rounded p-1 text-right rent-due"></td>
+                            <td class="px-2 py-2"><input type="number" step="0.01" value="${tenantData.received}" class="w-full border rounded p-1 text-right rent-received"></td>
+                        </tr>
+                    `;
+                });
+
+                tenantsHtml += `</tbody></table></div></div>`;
+            }
+        });
 
         const totalMonthlyRent = monthRecord.tenants.reduce((total, tenant) => {
             const rent = parseFloat(tenant.monthlyRent);
@@ -545,15 +558,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 0);
 
         tenantsHtml += `
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center mt-6 p-4 bg-blue-100 rounded-lg border border-blue-200">
-                <div class="md:col-span-2">
-                    <h4 class="font-bold text-lg text-blue-800">Total</h4>
-                </div>
-                <div class="md:col-span-3 grid grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-blue-700">Total Monthly Rent</label>
-                        <p class="text-xl font-bold text-blue-900">${formatCurrency(totalMonthlyRent)}</p>
-                    </div>
+            <div class="mt-6 p-4 bg-blue-100 rounded-lg border border-blue-200">
+                <div class="flex justify-end items-center">
+                    <h4 class="font-bold text-lg text-blue-800 mr-4">Total Monthly Rent:</h4>
+                    <p class="text-xl font-bold text-blue-900">${formatCurrency(totalMonthlyRent)}</p>
                 </div>
             </div>
         `;
