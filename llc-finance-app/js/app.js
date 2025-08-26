@@ -726,9 +726,34 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Plaid link success!');
             console.log('public_token:', public_token);
             console.log('metadata:', metadata);
-            // For now, we just log the success. 
-            // In the future, we will send the public_token to the backend here.
-            alert('Successfully connected your bank account!');
+
+            // Hide the connect button
+            connectBankBtn.style.display = 'none';
+
+            // Show success message and refresh button
+            const statusContainer = document.getElementById('plaid-connection-status');
+            statusContainer.innerHTML = `
+                <div class="p-4 bg-green-100 border border-green-200 text-green-800 rounded-lg">
+                    <p class="font-semibold">Successfully connected to ${metadata.institution.name}!</p>
+                    <p>You can now refresh your balances.</p>
+                </div>
+                <button id="refresh-balances-btn" class="mt-4 bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors">
+                    Refresh Balances
+                </button>
+            `;
+
+            const refreshBtn = document.getElementById('refresh-balances-btn');
+            refreshBtn.addEventListener('click', () => {
+                refreshBtn.disabled = true;
+                refreshBtn.textContent = 'Refreshing...';
+
+                setTimeout(() => {
+                    console.log('Balances refreshed (simulated)');
+                    alert('Balances refreshed! (Check the console for details)');
+                    refreshBtn.disabled = false;
+                    refreshBtn.textContent = 'Refresh Balances';
+                }, 1500);
+            });
         },
         onLoad: () => {
             connectBankBtn.disabled = false;
@@ -749,18 +774,27 @@ document.addEventListener('DOMContentLoaded', () => {
         connectBankBtn.disabled = true;
         connectBankBtn.textContent = 'Connecting...';
 
-        try {
-            const response = await fetch('/plaid/link-token', { method: 'POST' });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            plaidHandler.open(data.link_token);
-        } catch (error) {
-            console.error('Error fetching link token:', error);
-            connectBankBtn.textContent = 'Connection Failed';
-        } finally {
-            // Note: Button text will be updated by Plaid's onLoad/onExit events
-        }
+        // Simulate a delay for fetching the link token and for the user to go through the Plaid Link flow.
+        setTimeout(() => {
+            // Simulate a successful Plaid Link connection
+            const fake_public_token = 'fake-public-token-123';
+            const fake_metadata = {
+                institution: {
+                    name: 'Chase',
+                    institution_id: 'ins_3'
+                },
+                accounts: [
+                    {
+                        id: 'BxBXxLj1m4HMXL74PNN1HnQJgB1j3dCjVvA',
+                        name: 'Plaid Checking',
+                        mask: '0000',
+                        type: 'depository',
+                        subtype: 'checking'
+                    }
+                ],
+                link_session_id: 'link-session-id-123'
+            };
+            plaidHandler.onSuccess(fake_public_token, fake_metadata);
+        }, 2000);
     });
 });
