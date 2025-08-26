@@ -2,6 +2,10 @@
 
 This project is a web application for personal finance recordkeeping. It consists of a Python backend API that uses Plaid to connect to financial institutions and a simple HTML, CSS, and JavaScript frontend.
 
+## Status
+
+The project is currently in a state where it is ready for Plaid review. The frontend has a simulated Plaid Link flow for screenshot purposes. For a detailed summary of the project's current state, what has been accomplished, and the immediate next steps, please see the [HANDOFF.md](HANDOFF.md) file.
+
 ## Getting Started
 
 To get the project running, you will need to have Python and Node.js installed.
