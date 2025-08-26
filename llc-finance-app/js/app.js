@@ -716,4 +716,51 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     updateDashboardBalances();
+
+    // --- Plaid Integration --- 
+    const connectBankBtn = document.getElementById('connect-bank-btn');
+
+    const plaidHandler = Plaid.create({
+        token: null, // Will be set later
+        onSuccess: async (public_token, metadata) => {
+            console.log('Plaid link success!');
+            console.log('public_token:', public_token);
+            console.log('metadata:', metadata);
+            // For now, we just log the success. 
+            // In the future, we will send the public_token to the backend here.
+            alert('Successfully connected your bank account!');
+        },
+        onLoad: () => {
+            connectBankBtn.disabled = false;
+        },
+        onExit: (err, metadata) => {
+            if (err != null) {
+                console.error('Plaid link exited with error:', err);
+            }
+            console.log('Plaid link exited.');
+            console.log('metadata:', metadata);
+        },
+        onEvent: (eventName, metadata) => {
+            console.log('Plaid link event:', eventName, metadata);
+        }
+    });
+
+    connectBankBtn.addEventListener('click', async () => {
+        connectBankBtn.disabled = true;
+        connectBankBtn.textContent = 'Connecting...';
+
+        try {
+            const response = await fetch('/plaid/link-token', { method: 'POST' });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            plaidHandler.open(data.link_token);
+        } catch (error) {
+            console.error('Error fetching link token:', error);
+            connectBankBtn.textContent = 'Connection Failed';
+        } finally {
+            // Note: Button text will be updated by Plaid's onLoad/onExit events
+        }
+    });
 });
