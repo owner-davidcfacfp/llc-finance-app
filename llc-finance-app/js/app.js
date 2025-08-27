@@ -798,3 +798,75 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 2000);
     });
 });
+
+// --- Backend integration appended ---
+document.addEventListener('DOMContentLoaded', () => {
+  // Optional: redirect to an access page if storing values elsewhere
+  if (!sessionStorage.getItem('apiBase') || !sessionStorage.getItem('apiKey')) {
+    // If you prefer a dedicated access page, uncomment:
+    // location.href = 'access.html';
+    // Otherwise, pass ?apiBase=&apiKey= once and they will be cached for the session.
+  }
+
+  const connectBtn = document.getElementById('connect-bank-btn');
+  const refreshBtn = document.getElementById('refresh-balances-btn');
+
+  async function pullAndRenderBalances() {
+    const data = await Backend.refreshBalances(); // { accounts: [...] }
+    // Expose to your existing render code if it expects a global
+    window.accountsDataFromBackend = data.accounts || data || [];
+
+    // If you already have a renderer, hook it here:
+    if (typeof window.updateDashboardBalancesFromBackend === 'function') {
+      window.updateDashboardBalancesFromBackend(window.accountsDataFromBackend);
+      return;
+    }
+
+    // Fallback render if no custom renderer exists
+    const list = document.getElementById('accountsList');
+    const empty = document.getElementById('emptyMsg');
+    if (!list) return;
+    list.innerHTML = '';
+    const accs = window.accountsDataFromBackend;
+    if (!accs.length && empty) empty.classList.remove('hidden');
+    if (accs.length && empty) empty.classList.add('hidden');
+    accs.forEach(a => {
+      const li = document.createElement('li');
+      li.className = 'py-2 flex items-center justify-between';
+      const name = a.name || a.official_name || a.plaid_account_id || 'Account';
+      const amt  = a.current ?? a.balances?.current ?? 0;
+      const cur  = a.currency || a.balances?.iso_currency_code || '';
+      li.innerHTML = `<span class="text-slate-800">${name}</span>
+                      <span class="font-mono text-slate-700">${amt} ${cur}</span>`;
+      list.appendChild(li);
+    });
+  }
+
+  async function startPlaidLink() {
+    if (!connectBtn) return;
+    const original = connectBtn.textContent;
+    connectBtn.disabled = true; connectBtn.textContent = 'Connecting…';
+    try {
+      const { link_token } = await Backend.createLinkToken();
+      const handler = Plaid.create({
+        token: link_token,
+        onSuccess: async (public_token, metadata) => {
+          await Backend.exchangePublicToken(public_token, metadata?.institution?.name || null);
+          await pullAndRenderBalances();
+        },
+        onExit: () => {}
+      });
+      handler.open();
+    } catch (e) {
+      alert('Plaid Link failed: ' + e.message);
+    } finally {
+      connectBtn.disabled = false; connectBtn.textContent = original;
+    }
+  }
+
+  if (connectBtn) connectBtn.addEventListener('click', startPlaidLink);
+  if (refreshBtn) refreshBtn.addEventListener('click', pullAndRenderBalances);
+
+  // Initial attempt to load cached or freshly fetched balances
+  pullAndRenderBalances().catch(()=>{});
+});
